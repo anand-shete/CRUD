@@ -1,0 +1,26 @@
+services:
+  backend:
+    build:
+      context: . # Path to Dockerfile
+      dockerfile: Dockerfile
+    env_file: # Custom .env file
+      - ./.env.docker
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:8.0
+    volumes:
+      - mongo-data:/data/db
+
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "80:80" # Map host port 80 to Nginx config listen directive
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:

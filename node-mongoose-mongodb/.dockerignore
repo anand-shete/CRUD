@@ -1,0 +1,14 @@
+# Add all files to be ignored while building the image
+node_modules
+
+npm-debug.log
+.git
+.gitignore
+
+.env
+.env.docker
+
+Dockerfile
+Dockerfile.*
+
+compose.yaml

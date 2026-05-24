@@ -1,0 +1,151 @@
+// 'mongodb' package is useless
+// In native mongodb driver, the .find() method does not return the query results as an array. Instead, it returns a cursor, which is an object that allows us to iterate over the results. The .toArray() method is used to collect all the documents from the cursor into an array. SO DONT USE THE NATIVE mongodb DRIVER
+
+// Mongoose
+Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js. It provides a higher-level abstraction over the MongoDB native driver, enabling developers to interact with MongoDB using schemas, models, and validation logic. 
+
+
+// Schema
+A schema defines the structure of the documents in a MongoDB collection. It specifies the types of fields, default values, validation rules, and more.
+db.users.getIndexes(): Use this query in database to check the indexes(unique value,etc.)
+
+// Model
+A model is a wrapper around a schema, providing an interface to interact with the database. You use models to perform CRUD operations.
+
+// Documents
+Documents are instances of a model and represent individual records in a MongoDB collection.
+
+
+// SchemaTypes
+A SchemaType is a confirguration object for an individual property.
+https://mongoosejs.com/docs/schematypes.html#type-key
+
+
+
+// unique:true
+In Mongoose (and by extension, Typegoose), the unique option behaves differently for subdocuments in an array compared to top-level fields in a collection:
+    Top-Level Field: When you use unique: true on a field in a schema (e.g., email in a Users collection), it creates a unique index in MongoDB, ensuring no two documents in the collection have the same value.
+    Subdocument Array[{} , {},...]: When you use unique: true on a field inside a subdocument, it only enforces uniqueness within that specific array in a single parent document, not across all parent documents or all subdocuments globally. Additionally, Mongoose doesn’t create a MongoDB index for subdocument fields unless explicitly configured.
+    // FIXME
+The unique: true option in Mongoose tells MongoDB to create a unique index on the specified field. For top-level fields or single subdocuments, this works as expected: no two documents in the collection can have the same value for that field. But when it comes to arrays of subdocuments, the behavior is different.
+It applies the uniqueness constraint across documents, not within the elements of an array in one document.
+
+
+
+// Middleware (Hooks)
+Mongoose supports middleware, which allows you to define pre- and post-processing logic.
+
+
+
+// Pre-Save Hook 
+schemaName.pre('save')
+this keyword inside a hook refers to the newly created document using User.create({})
+Purpose: To modify or validate the document BEFORE it is saved to the database.
+Ideal for tasks like: Hashing passwords, Setting timestamps, Validating or normalizing fields (e.g., trimming strings, converting to lowercase), Checking business rules before persisting the data.
+You can modify the document(this) directly since it hasn’t been saved yet.
+If there’s an error, you can stop the save process by calling next(err).
+
+
+
+// Post-Save Hook post('save', (doc) => {} )
+Purpose: To perform actions that rely on the document after it has been saved to the database.
+Ideal for tasks like: Logging, Sending notifications (an email or webhook), Performing related asynchronous actions (adding a reference to another collection).
+Behavior: The document is already saved, so you cannot modify the saved instance in the database. The hook provides access to the saved document (as an argument) but doesn’t allow direct control of the save process.
+
+
+
+// Virtuals
+Virtuals are computed dynamically and are not persisted in the database. They are created when the document is retrieved.
+Ensure Virtuals Are Included When Converting to JSON: By default, Mongoose does not include virtuals when calling   toJSON() or toObject(). To include them:
+    userSchema.set('toJSON', { virtuals: true });
+    userSchema.set('toObject', { virtuals: true });
+Then, when converting the document:
+    const userJSON = user.toJSON();
+    console.log(userJSON.fullName); // Marcus Aurelius
+
+
+
+
+// Static methods
+Used on the mongoose model itself. For eg. User.findByEmail(). These methods operate on the entire collection or multiple documents. Inside a static method, this refers to the model, so we can use it to call Mongoose query methods like this.findOne, this.find, etc. Static methods can't be used in the pre('save') hook because they operate at the model level, not on individual documents.
+
+
+// Instance Methods: 
+Instance methods are used for operations specific to a single document. Inside an instance method, this refers to the specific document instance. this allows direct access to the document's fields and methods.
+
+// Use cases
+Static Method: If we want to create our own method on our model like User.findByEmail(), use create a static method.
+Instance Method: If the operation to be applied only on an instance, we use an instance method.
+
+
+
+
+// Population
+In Mongoose, .populate() is a powerful method used to automatically replace the references (IDs stored in one document) with the actual documents they refer to. It helps us work with related data between collections in a more seamless way, similar to how joins work in relational databases.
+
+// Working of .populate()
+Firstly, ensure the field being populated has a ref defined in the schema.
+    // postSchema must have a field 'author' with type ObjectId and ref
+    let posts = Post.find().populate('author')      
+.populate() only works in queries. It dynamically fetches the referenced document from the collection and replaces the ObjectId with the entire document in the query 'result', NOT in the database. 
+Database will still contain the mongoose.Schema.Types.ObjectId and the ref.
+
+// Performance Considerations
+.populate() involves multiple database queries. Overusing it in large datasets can impact performance.
+For heavy queries, consider denormalizing the data (storing the related data directly in the document).
+
+
+
+// Indexes
+Indexes are data structures that improve the speed of data retrieval operations on a database. They work like the index of a book—allowing quick access to data without scanning every record in a collection or table.
+In MongoDB, for example, an index is typically a collection of key-value pairs that help the database find data faster, especially for large datasets. Indexes reduce the amount of time it takes to search through data, ensuring more efficient queries.
+Without indexes, MongoDB would need to scan every document in the collection to fulfill a query, which can be very slow, especially for large datasets. With indexes, MongoDB can directly jump to the documents that match the query conditions, making the retrieval much faster.
+Indexes can also enforce constraints like uniqueness. For example, in a collection where email addresses should be unique, an index can be created on the email field to ensure that no two documents can have the same email.
+Indexes are also used for sorting and range queries, making operations like find() with sort() or gt, lt, gte, and lte operators faster.
+    Eg. userSchema.index({ email: 1 });
+unique:true fields have index added automatically to enforce uniqueness
+
+
+
+
+// Best Practices
+Schema Design: 
+    Normalize data where possible. Use embedded documents for closely related data. Design indexes upfront to optimize query performance.
+Validation:
+    Define validations at the schema level to ensure data consistency.
+Middleware:
+    Use middleware for repetitive tasks like hashing passwords or setting timestamps.
+Error Handling: 
+    Always handle errors when performing database operations. Use .catch for Promises or try-catch with async-await.
+Lean Queries: 
+    By default, Mongoose queries return Mongoose documents, which are rich objects with additional functionality such as:
+    Built-in instance methods (like .save() or custom methods), Getters, setters and virtuals, Change tracking for fields (isModified), etc.
+    However, for many read-only operations we don't need these extra features, and using lean() can significantly improve performance by skipping these overheads. Using lean() plain javascript objects are returned.
+    You can call .lean() on a query to instruct Mongoose to skip building Mongoose documents and instead return plain JavaScript objects.
+    const user = await User.findOne({}).lean();
+
+// Use cases
+Use lean() for read-only operations where we don’t need Mongoose document features, especially for performance-critical tasks.
+Avoid lean() when we need document features like virtuals, instance methods, or pre and post middlewares
+
+
+
+
+// Measuring Query-Time in Mongoose
+1. Use console.time() and console.timeEnd()
+
+2. If we want detailed information about the query execution, we can use MongoDB's .explain() function.
+const query = Model.find({}).explain('executionStats');
+console.log(query);
+
+3. Mongoose has a built-in query logging feature. We can enable it to log the execution time of all queries.
+mongoose.set('debug', function (collectionName, method, query, doc, options) {
+    console.log(`${collectionName}.${method}`, JSON.stringify(query), `Execution time: ${options?.executionTime} ms`);
+});
+
+
+
+// .select(" fields... ") to query only required fields from the database
+const user = await AdminModel.findOne({ email: email })
+.lean()
+.select("_id role status password");

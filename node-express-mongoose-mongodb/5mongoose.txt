@@ -1,0 +1,163 @@
+Mongoose.js: ODM (Object Data Modeling) library for MongoDB.
+// Mongoose vs MongoDB
+| Aspect              | MongoDB (Native Driver)         | Mongoose                                 |
+| ------------------- | ------------------------------- | ---------------------------------------- |
+| Type                | Low-level Node.js driver        | ODM (Object Data Modeling) layer         |
+| Schema              | Schema-less                     | Schema-based                             |
+| Validation          | Manual (if needed)              | Built-in                                 |
+| Raw power           | Full access to MongoDB features | Abstracted, opinionated                  |
+| Performance         | Faster (less abstraction)       | Slightly slower (due to overhead)        |
+| Learning curve      | Steeper (more verbose)          | Easier (model-oriented)                  |
+| Flexibility         | Maximum                         | Moderate                                 |
+| Data Modeling       | Manual                          | Clean, structured models                 |
+| Use with TypeScript | Verbose                         | Better support with decorators & classes |
+| Population (Joins)  | Manual `$lookup`                | Built-in `.populate()`                   |
+
+
+
+// Connecting to MongoDB using mongoose
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/myDatabase')
+.then(() => console.log('Connected to MongoDB'))
+.catch((err) => console.error('Connection error:', err));
+
+
+
+// Creating a Schema
+A schema defines the structure of documents in a collection. It specifies fields, types, default values, validation, and more.
+const Schema = mongoose.Schema;
+const userSchema = new Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  age: { type: Number, min: 0 },
+  createdAt: { type: Date, default: Date.now },
+});
+
+
+
+// Creating a Model
+A model is a compiled representation of a schema and provides an interface to interact with the database.
+const User = mongoose.model('User', userSchema);      //mongoose.model('Collection_name_you_want', Schema) 
+  - This model is exported and this varible is what used to perform all the CRUD operations inside the database
+
+
+// SchemaTypes
+The permitted SchemaTypes are:
+String
+Number
+Date
+Buffer
+Boolean
+Mixed
+ObjectId  (mongoose.SchemaTypes.ObjectId)
+Array Eg. [], [String], [Date], etc.
+Decimal128
+Map
+UUID
+
+
+
+
+// Middleware (Hooks)
+Middleware (also called pre and post hooks) are functions which are passed control during execution of asynchronous functions. Middleware is specified on the schema level and is useful for writing plugins.
+Here are the possible strings that can be passed to pre():
+aggregate
+bulkWrite
+count
+countDocuments
+createCollection
+deleteOne
+deleteMany
+estimatedDocumentCount
+find
+findOne
+findOneAndDelete
+findOneAndReplace
+findOneAndUpdate
+init
+insertMany
+replaceOne
+save
+update
+updateOne
+updateMany
+validate
+userSchema.pre('save', function (next) {
+  console.log(`User ${this.name} is about to be saved.`);
+  next();
+});
+
+// this keyword cannot be used as an argument name
+userSchema.post('save', function (doc, next) {
+  console.log(`User ${doc.name} has been saved.`);
+  next();
+});
+
+
+
+
+// Schema Methods
+Custom instance or static methods can be added to a schema:
+// Instance method
+userSchema.methods.sayHello = function () {       // Cannot use arrow functions here
+  console.log(`Hello, my name is ${this.name}`);
+};
+
+// Static method
+userSchema.statics.findByEmail = function (email) {
+  return this.findOne({ email });
+};
+const User = mongoose.model('User', userSchema);
+
+// Usage
+User.findByEmail('johndoe@example.com')
+  .then((user) => user.sayHello())
+  .catch((err) => console.error(err));
+
+
+
+// Mongoose supports relationships between documents using references and population.
+  - populate is a virtual operation performed by Mongoose in memory and is not persisted to the database.
+  - Only the ObjectId is stored inside the document which is what we need to eastablish relationship.
+const addressSchema = mongoose.Schema({
+  name: { type: mongoose.SchemaTypes.ObjectId, ref: "User" },
+  street: String,
+  city: String,
+});
+const Address = mongoose.model("Address", addressSchema);
+
+// Populate details in query
+  const result2 = await Address.findById(result._id).populate("name");
+  console.log(result2);
+
+
+
+
+// Virtuals
+Virtuals are document properties that you can get and set but that do not get persisted to MongoDB. The getters are useful for formatting or combining fields, while setters are useful for de-composing a single value into multiple values for storage.
+const personSchema = new Schema({
+  name: {
+    first: String,
+    last: String
+  }
+}, 
+{
+  virtuals: {
+    fullName: {
+      get() {
+        return this.name.first + ' ' + this.name.last;
+      }
+    }
+  }
+});
+
+// compile our model
+const Person = mongoose.model('Person', personSchema);
+
+// create a document
+const axl = new Person({
+  name: { first: 'Axl', last: 'Rose' }
+});
+ 
+Now, mongoose will call your getter function every time you access the fullName property:
+console.log(axl.fullName);    // Axl Rose

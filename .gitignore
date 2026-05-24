@@ -6,6 +6,6 @@ dist
 .env.docker
 
 
-/generated/prisma
+**/generated/prisma
 
 .prettierrc

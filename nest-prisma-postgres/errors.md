@@ -1,4 +1,5 @@
 If you prefer an object-oriented approach (common in NestJS frameworks), you can wrap your Prisma calls in a custom class or service layer that intercept errors before they hit the controller.
+`pnpm add nestjs-prisma`
 
 ```ts
 export class BaseRepository {

@@ -20,7 +20,7 @@ export const connectDb = async () => {
     await prisma.$queryRaw`SELECT 1`;
     console.log("PostgreSQL connected successfully via Prisma Adapter!");
   } catch (error) {
-    console.error("❌ \x1b[31mFailed to connect to PostgreSQL:\x1b[0m", error);
+    console.error("\x1b[31mFailed to connect to PostgreSQL:\x1b[0m", error);
     process.exit(1);
   }
 };

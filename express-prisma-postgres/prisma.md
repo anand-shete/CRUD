@@ -7,6 +7,13 @@
 - Single updates and deletes can only be done on unique fields.
 - Always prefer explicit fields by using `@db` instead of letting prisma infer it
 
+## Install dependencies
+
+```sh
+pnpm add prisma @types/pg -D
+pnpm add @prisma/client @prisma/adapter-pg pg dotenv
+```
+
 ## Prisma CLI
 
 | Command                 | Description                                                  |

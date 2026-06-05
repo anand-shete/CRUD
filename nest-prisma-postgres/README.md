@@ -1,16 +1,16 @@
 ## Tech Stack
 
 **Node.js**: Javascript runtime environment
-**Express**: Node.js framework
+**Nest.js**: Node.js framework
 **Prisma**: Postgres ORM
 **PostgreSQL**: SQL database
 
 ## API Endpoints
 
 - `GET` `/api/v1/user`: Get all users
+- `POST` `/api/v1/user`: Create a user
 - `GET` `/api/v1/user/:id` : Get user by id
-- `POST` `/api/v1/user/create`: Create a user
-- `POST` `/api/v1/user/update-username`: Reset username
+- `PATCH` `/api/v1/user/:id`: Reset name
 - `DELETE` `/api/v1/user/:id` : Delete user by id
 
 ## Local Development
@@ -52,5 +52,5 @@ pnpm dlx prisma generate
 5. Start development server
 
 ```sh
-pnpm dev
+pnpm start:dev
 ```

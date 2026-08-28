@@ -9,3 +9,8 @@ dist
 **/generated/prisma
 
 .prettierrc
+
+
+# python
+__pycache__
+*.venv

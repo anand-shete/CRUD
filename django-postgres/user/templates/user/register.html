@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <title>Create Account</title>
+  </head>
+  <body>
+    <h1 class="text-3xl py-10">Register User</h1>
+    <form class="[&_input]:border [&_input]:border-black">
+      {% csrf_token %}
+      <label for="username">Username:</label>
+      <input type="text" id="username" required/>
+      <br /><br />
+
+      <label for="email">Email:</label>
+      <input type="email" id="email" required/>
+      <br /><br />
+
+      <label for="password">Password:</label>
+      <input type="password" id="password" required/>
+      <br /><br /><br />
+
+      <button type="submit" class="bg-black/40 mr-3 p-3 border rounded-xl">Submit</button>
+      <a class="bg-black/40 p-3 border rounded-xl" href="/user/login">Log In to existing Account</a>
+    </form>
+  </body>
+</html>
